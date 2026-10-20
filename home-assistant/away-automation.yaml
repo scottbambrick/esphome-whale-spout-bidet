@@ -1,0 +1,50 @@
+# Turns the seat heater off while nobody is home and restores it when somebody returns.
+# Uses the "Seat Heat Away Mode" switch from example.yaml (works even while the controls are locked, and can only
+# turn the heater off or put it back where it was - see docs/access-control.md).
+#
+# Adjust:
+#   - binary_sensor.home_occupied: any "somebody is home" sensor you have (or a group of person entities)
+#   - the entity id of the switch: <esphome device name>_<entity>, e.g. switch.bidet_seat_seat_heat_away_mode
+#   - the status entity of the ESPHome device (binary_sensor.<name>_status), used to re-apply after a restart
+alias: "Bidet seat - Heater off while nobody's home"
+id: bidet_seat_heater_away
+description: >-
+  Seat heater off 15 minutes after nobody is home, back to the previous level as soon as somebody returns.
+  Also re-applies the right state when the controller or Home Assistant restarts.
+mode: restart
+triggers:
+  - trigger: state
+    entity_id: binary_sensor.home_occupied
+    to: "off"
+    for: { minutes: 15 }
+    id: away
+  - trigger: state
+    entity_id: binary_sensor.home_occupied
+    to: "on"
+    id: home
+  - trigger: state
+    entity_id: binary_sensor.whale_spout_bidet_status
+    to: "on"
+    id: sync
+  - trigger: homeassistant
+    event: start
+    id: sync
+actions:
+  - choose:
+      - conditions: [{ condition: trigger, id: away }]
+        sequence:
+          - action: switch.turn_on
+            target: { entity_id: switch.bidet_seat_seat_heat_away_mode }
+      - conditions: [{ condition: trigger, id: home }]
+        sequence:
+          - action: switch.turn_off
+            target: { entity_id: switch.bidet_seat_seat_heat_away_mode }
+      - conditions:
+          - { condition: trigger, id: sync }
+          - { condition: state, entity_id: binary_sensor.home_occupied, state: "off", for: { minutes: 15 } }
+        sequence:
+          - action: switch.turn_on
+            target: { entity_id: switch.bidet_seat_seat_heat_away_mode }
+    default:
+      - action: switch.turn_off
+        target: { entity_id: switch.bidet_seat_seat_heat_away_mode }

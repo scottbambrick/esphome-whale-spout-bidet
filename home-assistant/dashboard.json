@@ -1,0 +1,508 @@
+{
+  "views": [
+    {
+      "type": "sections",
+      "path": "seat",
+      "title": "Bidet Seat",
+      "icon": "mdi:toilet",
+      "max_columns": 2,
+      "sections": [
+        {
+          "type": "grid",
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "Access",
+              "heading_style": "title",
+              "icon": "mdi:lock-open-variant"
+            },
+            {
+              "type": "tile",
+              "entity": "binary_sensor.bidet_seat_controls_unlocked",
+              "name": "Controls",
+              "icon": "mdi:lock",
+              "state_content": "state",
+              "color": "green",
+              "vertical": false
+            },
+            {
+              "type": "conditional",
+              "conditions": [
+                {
+                  "condition": "state",
+                  "entity": "binary_sensor.bidet_seat_controls_unlocked",
+                  "state_not": "on"
+                }
+              ],
+              "card": {
+                "type": "markdown",
+                "content": "**Locked.** Press any button on the seat's remote to unlock the controls. They stay unlocked until 3 minutes after the last button or change. This stops anyone elsewhere in the house operating the seat while it is in use."
+              }
+            },
+            {
+              "type": "conditional",
+              "conditions": [
+                {
+                  "condition": "state",
+                  "entity": "binary_sensor.bidet_seat_controls_unlocked",
+                  "state": "on"
+                }
+              ],
+              "card": {
+                "type": "tile",
+                "entity": "sensor.bidet_seat_unlock_time_remaining",
+                "name": "Locks again in (3 min after last action)",
+                "icon": "mdi:timer-sand"
+              }
+            },
+            {
+              "type": "tile",
+              "entity": "sensor.bidet_seat_last_remote_button",
+              "name": "Last remote button",
+              "icon": "mdi:remote"
+            },
+            {
+              "type": "tile",
+              "entity": "sensor.bidet_seat_remote_packets_heard",
+              "name": "Remote packets heard",
+              "icon": "mdi:counter"
+            },
+            {
+              "type": "tile",
+              "entity": "switch.bidet_seat_seat_heat_away_mode",
+              "name": "Seat heat away mode",
+              "icon": "mdi:home-export-outline"
+            },
+            {
+              "type": "conditional",
+              "conditions": [
+                {
+                  "condition": "state",
+                  "entity": "binary_sensor.bidet_seat_controls_unlocked",
+                  "state": "on"
+                }
+              ],
+              "card": {
+                "type": "tile",
+                "entity": "button.bidet_seat_lock_controls",
+                "name": "Lock now",
+                "icon": "mdi:lock",
+                "vertical": true,
+                "tap_action": {
+                  "action": "perform-action",
+                  "perform_action": "button.press",
+                  "target": {
+                    "entity_id": "button.bidet_seat_lock_controls"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "grid",
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "Wash",
+              "heading_style": "title",
+              "icon": "mdi:shower"
+            },
+            {
+              "type": "tile",
+              "entity": "button.bidet_seat_stop",
+              "name": "Stop",
+              "icon": "mdi:stop",
+              "vertical": true,
+              "tap_action": {
+                "action": "perform-action",
+                "perform_action": "button.press",
+                "target": {
+                  "entity_id": "button.bidet_seat_stop"
+                }
+              },
+              "color": "red"
+            },
+            {
+              "type": "conditional",
+              "conditions": [
+                {
+                  "condition": "state",
+                  "entity": "binary_sensor.bidet_seat_controls_unlocked",
+                  "state": "on"
+                }
+              ],
+              "card": {
+                "type": "grid",
+                "columns": 3,
+                "square": false,
+                "cards": [
+                  {
+                    "type": "tile",
+                    "entity": "button.bidet_seat_rear",
+                    "name": "Rear",
+                    "icon": "mdi:shower",
+                    "vertical": true,
+                    "tap_action": {
+                      "action": "perform-action",
+                      "perform_action": "button.press",
+                      "target": {
+                        "entity_id": "button.bidet_seat_rear"
+                      }
+                    },
+                    "color": "blue"
+                  },
+                  {
+                    "type": "tile",
+                    "entity": "button.bidet_seat_female",
+                    "name": "Female",
+                    "icon": "mdi:shower-head",
+                    "vertical": true,
+                    "tap_action": {
+                      "action": "perform-action",
+                      "perform_action": "button.press",
+                      "target": {
+                        "entity_id": "button.bidet_seat_female"
+                      }
+                    },
+                    "color": "pink"
+                  },
+                  {
+                    "type": "tile",
+                    "entity": "button.bidet_seat_dry",
+                    "name": "Dry",
+                    "icon": "mdi:air-filter",
+                    "vertical": true,
+                    "tap_action": {
+                      "action": "perform-action",
+                      "perform_action": "button.press",
+                      "target": {
+                        "entity_id": "button.bidet_seat_dry"
+                      }
+                    },
+                    "color": "orange"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "type": "grid",
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "Rear settings",
+              "heading_style": "title",
+              "icon": "mdi:shower"
+            },
+            {
+              "type": "conditional",
+              "conditions": [
+                {
+                  "condition": "state",
+                  "entity": "binary_sensor.bidet_seat_controls_unlocked",
+                  "state": "on"
+                }
+              ],
+              "card": {
+                "type": "tile",
+                "entity": "number.bidet_seat_rear_temperature",
+                "name": "Temperature (1: ~35, 2: ~37, 3: ~39 C)",
+                "icon": "mdi:thermometer-water",
+                "features": [
+                  {
+                    "type": "numeric-input",
+                    "style": "slider"
+                  }
+                ],
+                "features_position": "bottom"
+              }
+            },
+            {
+              "type": "conditional",
+              "conditions": [
+                {
+                  "condition": "state",
+                  "entity": "binary_sensor.bidet_seat_controls_unlocked",
+                  "state": "on"
+                }
+              ],
+              "card": {
+                "type": "tile",
+                "entity": "number.bidet_seat_rear_flow",
+                "name": "Flow",
+                "icon": "mdi:water-percent",
+                "features": [
+                  {
+                    "type": "numeric-input",
+                    "style": "slider"
+                  }
+                ],
+                "features_position": "bottom"
+              }
+            },
+            {
+              "type": "conditional",
+              "conditions": [
+                {
+                  "condition": "state",
+                  "entity": "binary_sensor.bidet_seat_controls_unlocked",
+                  "state": "on"
+                }
+              ],
+              "card": {
+                "type": "tile",
+                "entity": "number.bidet_seat_rear_position",
+                "name": "Position",
+                "icon": "mdi:arrow-expand-vertical",
+                "features": [
+                  {
+                    "type": "numeric-input",
+                    "style": "slider"
+                  }
+                ],
+                "features_position": "bottom"
+              }
+            }
+          ]
+        },
+        {
+          "type": "grid",
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "Female settings",
+              "heading_style": "title",
+              "icon": "mdi:shower-head"
+            },
+            {
+              "type": "conditional",
+              "conditions": [
+                {
+                  "condition": "state",
+                  "entity": "binary_sensor.bidet_seat_controls_unlocked",
+                  "state": "on"
+                }
+              ],
+              "card": {
+                "type": "tile",
+                "entity": "number.bidet_seat_female_temperature",
+                "name": "Temperature (1: ~35, 2: ~37, 3: ~39 C)",
+                "icon": "mdi:thermometer-water",
+                "features": [
+                  {
+                    "type": "numeric-input",
+                    "style": "slider"
+                  }
+                ],
+                "features_position": "bottom"
+              }
+            },
+            {
+              "type": "conditional",
+              "conditions": [
+                {
+                  "condition": "state",
+                  "entity": "binary_sensor.bidet_seat_controls_unlocked",
+                  "state": "on"
+                }
+              ],
+              "card": {
+                "type": "tile",
+                "entity": "number.bidet_seat_female_flow",
+                "name": "Flow",
+                "icon": "mdi:water-percent",
+                "features": [
+                  {
+                    "type": "numeric-input",
+                    "style": "slider"
+                  }
+                ],
+                "features_position": "bottom"
+              }
+            },
+            {
+              "type": "conditional",
+              "conditions": [
+                {
+                  "condition": "state",
+                  "entity": "binary_sensor.bidet_seat_controls_unlocked",
+                  "state": "on"
+                }
+              ],
+              "card": {
+                "type": "tile",
+                "entity": "number.bidet_seat_female_position",
+                "name": "Position",
+                "icon": "mdi:arrow-expand-vertical",
+                "features": [
+                  {
+                    "type": "numeric-input",
+                    "style": "slider"
+                  }
+                ],
+                "features_position": "bottom"
+              }
+            }
+          ]
+        },
+        {
+          "type": "grid",
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "Dry & seat",
+              "heading_style": "title",
+              "icon": "mdi:tune-variant"
+            },
+            {
+              "type": "conditional",
+              "conditions": [
+                {
+                  "condition": "state",
+                  "entity": "binary_sensor.bidet_seat_controls_unlocked",
+                  "state": "on"
+                }
+              ],
+              "card": {
+                "type": "tile",
+                "entity": "number.bidet_seat_dry_temperature",
+                "name": "Dry temperature (1: ~36, 2: ~43, 3: ~50 C)",
+                "icon": "mdi:thermometer-lines",
+                "features": [
+                  {
+                    "type": "numeric-input",
+                    "style": "slider"
+                  }
+                ],
+                "features_position": "bottom"
+              }
+            },
+            {
+              "type": "conditional",
+              "conditions": [
+                {
+                  "condition": "state",
+                  "entity": "binary_sensor.bidet_seat_controls_unlocked",
+                  "state": "on"
+                }
+              ],
+              "card": {
+                "type": "tile",
+                "entity": "number.bidet_seat_seat_temperature",
+                "name": "Seat heat (0: off, 1: ~32, 2: ~35, 3: ~38 C)",
+                "icon": "mdi:seat-passenger",
+                "features": [
+                  {
+                    "type": "numeric-input",
+                    "style": "slider"
+                  }
+                ],
+                "features_position": "bottom"
+              }
+            },
+            {
+              "type": "conditional",
+              "conditions": [
+                {
+                  "condition": "state",
+                  "entity": "binary_sensor.bidet_seat_controls_unlocked",
+                  "state_not": "on"
+                }
+              ],
+              "card": {
+                "type": "markdown",
+                "content": "Press any button on the remote to unlock."
+              }
+            }
+          ]
+        },
+        {
+          "type": "grid",
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "Extras",
+              "heading_style": "title",
+              "icon": "mdi:star-four-points"
+            },
+            {
+              "type": "conditional",
+              "conditions": [
+                {
+                  "condition": "state",
+                  "entity": "binary_sensor.bidet_seat_controls_unlocked",
+                  "state": "on"
+                }
+              ],
+              "card": {
+                "type": "grid",
+                "columns": 3,
+                "square": false,
+                "cards": [
+                  {
+                    "type": "tile",
+                    "entity": "button.bidet_seat_swing_toggle",
+                    "name": "Swing",
+                    "icon": "mdi:swap-horizontal",
+                    "vertical": true,
+                    "tap_action": {
+                      "action": "perform-action",
+                      "perform_action": "button.press",
+                      "target": {
+                        "entity_id": "button.bidet_seat_swing_toggle"
+                      }
+                    }
+                  },
+                  {
+                    "type": "tile",
+                    "entity": "button.bidet_seat_massage_toggle",
+                    "name": "Massage",
+                    "icon": "mdi:vibrate",
+                    "vertical": true,
+                    "tap_action": {
+                      "action": "perform-action",
+                      "perform_action": "button.press",
+                      "target": {
+                        "entity_id": "button.bidet_seat_massage_toggle"
+                      }
+                    }
+                  },
+                  {
+                    "type": "tile",
+                    "entity": "button.bidet_seat_self_clean",
+                    "name": "Self clean",
+                    "icon": "mdi:broom",
+                    "vertical": true,
+                    "tap_action": {
+                      "action": "perform-action",
+                      "perform_action": "button.press",
+                      "target": {
+                        "entity_id": "button.bidet_seat_self_clean"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "type": "conditional",
+              "conditions": [
+                {
+                  "condition": "state",
+                  "entity": "binary_sensor.bidet_seat_controls_unlocked",
+                  "state_not": "on"
+                }
+              ],
+              "card": {
+                "type": "markdown",
+                "content": "Press any button on the remote to unlock."
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
