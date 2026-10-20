@@ -2,6 +2,11 @@
 # Uses the "Seat Heat Away Mode" switch from example.yaml (works even while the controls are locked, and can only
 # turn the heater off or put it back where it was - see docs/access-control.md).
 #
+# To also keep the heater off at other times when the seat is unlikely to be used (overnight, bedtime mode...),
+# replace binary_sensor.home_occupied with a template binary sensor of your own that says "somebody could use the
+# seat soon", e.g.  home is occupied AND it's between 05:30 and 23:00 (with `delay_off`/`delay_on` as you like), and
+# invert the on/off triggers accordingly. The switch itself doesn't care why it's turned on.
+#
 # Adjust:
 #   - binary_sensor.home_occupied: any "somebody is home" sensor you have (or a group of person entities)
 #   - the entity id of the switch: <esphome device name>_<entity>, e.g. switch.bidet_seat_seat_heat_away_mode
