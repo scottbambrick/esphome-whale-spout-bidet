@@ -29,7 +29,7 @@ jobs:
         with:
           python-version: "3.13"
       - name: Install ESPHome
-        run: pip install "esphome==2026.9.1"
+        run: pip install "esphome==2026.10.1"
       - name: Add dummy secrets
         run: |
           printf 'api_key: "%s"\nwifi_ssid: "ci"\nwifi_password: "ci-password"\n' \

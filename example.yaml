@@ -108,7 +108,7 @@ globals:
   - {id: unlock_end_ms, type: uint32_t, initial_value: '0'}
   - {id: rx_count, type: uint32_t, initial_value: '0'}
   - {id: seat_heat_before_away, type: int, restore_value: true, initial_value: '0'} # seat heat level to restore
-  - {id: seat_function, type: int, initial_value: '0'} # last function used on the remote: 1 rear, 2 female, 3 dry
+  - {id: seat_function, type: int, restore_value: true, initial_value: '0'} # last function used (remote or HA): 1 rear, 2 female, 3 dry
 
 interval:
   # Act on packets heard from the real remote.
@@ -181,6 +181,11 @@ interval:
           if (left < 0) left = 0;
           if (!id(unlock_time_remaining).has_state() || id(unlock_time_remaining).state != left)
             id(unlock_time_remaining).publish_state(left);
+          // ...and the function the level settings currently apply to (the dashboard shows its settings)
+          const char *fn = id(seat_function) == 1 ? "Rear" : id(seat_function) == 2 ? "Female"
+                         : id(seat_function) == 3 ? "Dry" : "None";
+          if (!id(current_function).has_state() || id(current_function).state != fn)
+            id(current_function).publish_state(fn);
 
 script:
   # Called when any button is heard from the real remote (see the interval above); restarts the 3-minute window.
@@ -299,6 +304,11 @@ text_sensor:
     id: last_remote_button
     name: Last Remote Button
     icon: mdi:remote
+  - platform: template
+    device_id: bidet_seat
+    id: current_function
+    name: Current Function # Rear / Female / Dry: the wash the temperature, flow and position buttons adjust
+    icon: mdi:shower-head
 
 sensor:
   - platform: template

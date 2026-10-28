@@ -60,6 +60,7 @@ Everything belongs to an ESPHome sub-device called *Bidet Seat*.
 | `binary_sensor` Controls Unlocked, `sensor` Unlock Time Remaining | the lock state |
 | `button` Lock Controls | re-lock immediately |
 | `text_sensor` Last Remote Button, `sensor` Remote Packets Heard | what the ESP32 heard from the real remote (useful for range tests) |
+| `text_sensor` Current Function | Rear / Female / Dry: the wash the temperature, flow and position settings apply to (kept across reboots) |
 | `switch` Seat Heat Away Mode | for the away automation |
 
 ## How it works, briefly
