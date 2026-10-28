@@ -33,6 +33,9 @@ substitutions:
 esphome:
   name: ${name}
   friendly_name: ${friendly_name}
+  # ESPHome 2026.10+ sizes the remote_receiver dumper list at build time; BidetRxDumper registers itself in on_boot below
+  platformio_options:
+    build_flags: -DREMOTE_BASE_DUMPER_COUNT=1
   includes:
     - includes/bidet_seat.h
   on_boot:
