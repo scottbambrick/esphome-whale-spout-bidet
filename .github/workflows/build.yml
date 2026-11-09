@@ -11,6 +11,34 @@ permissions:
   contents: read
 
 jobs:
+  lint:
+    # Code style: ESPHome's (Google-based) .clang-format for the C++ and ruff for the Python.
+    # If anything is off, the format-fixes artifact holds a patch with the formatters' changes.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - name: Install the formatters
+        run: pip install "clang-format==13.0.1" "ruff==0.16.10"
+      - name: Run the formatters
+        run: |
+          git ls-files '*.c' '*.cpp' '*.h' '*.ino' | xargs -r clang-format -i --style=file
+          ruff check --fix --exit-zero --quiet .
+          ruff format --quiet .
+          git diff > format-fixes.patch
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: format-fixes
+          path: format-fixes.patch
+      - name: Check formatting
+        run: git diff --stat --exit-code
+      - name: Python lint (ruff check)
+        if: ${{ !cancelled() }}
+        run: ruff check --output-format=github .
+
   test:
     runs-on: ubuntu-latest
     steps:
