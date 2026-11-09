@@ -18,22 +18,23 @@
 // buttons send one or the other depending on whether Dry is running).
 inline std::vector<int32_t> bidet_packet(int key, int mode, int temp, int dry, int flow, int pos, int seat) {
   auto code = [](int level) { return 2 * level - 1; };
-  uint8_t n[8] = {0x2, 0xA, (uint8_t) ((key >> 4) & 0xF), (uint8_t) (key & 0xF), 0,
-                  (uint8_t) code(flow), (uint8_t) code(pos), 0};
+  uint8_t n[8] = {
+      0x2, 0xA, (uint8_t) ((key >> 4) & 0xF), (uint8_t) (key & 0xF), 0, (uint8_t) code(flow), (uint8_t) code(pos), 0};
   n[4] = mode == 0 ? code(temp) : mode == 2 ? seat : mode == 3 ? code(dry) : 0;
   int sum = 0;
-  for (int i = 0; i < 7; i++) sum += n[i];
+  for (int i = 0; i < 7; i++)
+    sum += n[i];
   n[7] = sum & 0xF;
 
   std::vector<int32_t> burst;
   burst.reserve(85);
-  burst.push_back(240);   // short lead-in pulse (transmitter ramp-up on the real remote)
+  burst.push_back(240);  // short lead-in pulse (transmitter ramp-up on the real remote)
   burst.push_back(-564);
   for (int i = 0; i < 7; i++) {  // preamble
     burst.push_back(564);
     burst.push_back(-564);
   }
-  burst.push_back(564);   // sync
+  burst.push_back(564);  // sync
   burst.push_back(-4524);
   for (int i = 0; i < 8; i++) {  // 32 data bits, MSB first
     for (int b = 3; b >= 0; b--) {
@@ -41,7 +42,7 @@ inline std::vector<int32_t> bidet_packet(int key, int mode, int temp, int dry, i
       burst.push_back((n[i] >> b) & 1 ? -1692 : -564);
     }
   }
-  burst.push_back(564);   // stop pulse
+  burst.push_back(564);  // stop pulse
   burst.push_back(-19900);
 
   // two bursts, 120 ms start to start (83 ms on + 37 ms off): extend the first tail by ~37 ms
@@ -70,11 +71,15 @@ inline int bidet_level(int code) { return (code == 1 || code == 3 || code == 5) 
 // Split a 32-bit packet into key / n4 / n5 / n6 and check the header (2a) and checksum.
 inline bool bidet_decode(uint32_t p, int &key, int &n4, int &n5, int &n6) {
   int n[8];
-  for (int i = 0; i < 8; i++) n[i] = (p >> (28 - 4 * i)) & 0xF;
-  if (n[0] != 0x2 || n[1] != 0xA) return false;
+  for (int i = 0; i < 8; i++)
+    n[i] = (p >> (28 - 4 * i)) & 0xF;
+  if (n[0] != 0x2 || n[1] != 0xA)
+    return false;
   int sum = 0;
-  for (int i = 0; i < 7; i++) sum += n[i];
-  if ((sum & 0xF) != n[7]) return false;
+  for (int i = 0; i < 7; i++)
+    sum += n[i];
+  if ((sum & 0xF) != n[7])
+    return false;
   key = (n[2] << 4) | n[3];
   n4 = n[4];
   n5 = n[5];
@@ -91,12 +96,14 @@ class BidetRxDumper : public esphome::remote_base::RemoteReceiverDumperBase {
     int n = (int) raw.size();
     for (int i = 0; i + 1 < n; i++) {
       int sync = std::abs(raw[i]);
-      if (sync < 3400 || sync > 5800) continue;
+      if (sync < 3400 || sync > 5800)
+        continue;
       uint32_t p = 0;
       int bits = 0;
       for (int j = i + 1; j + 1 < n && bits < 32; j += 2) {
         int mark = std::abs(raw[j]), gap = std::abs(raw[j + 1]);
-        if (mark < 300 || mark > 1000 || gap < 300 || gap > 2400) break;
+        if (mark < 300 || mark > 1000 || gap < 300 || gap > 2400)
+          break;
         p = (p << 1) | (gap > 1128 ? 1 : 0);
         bits++;
       }

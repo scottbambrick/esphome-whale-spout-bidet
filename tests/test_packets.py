@@ -1,10 +1,13 @@
 """Checks the reference implementation against every packet captured from a real remote.
 Run: python3 -m unittest discover -s tests   (no dependencies)"""
+
 import os
 import sys
 import unittest
 
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "tools"))
+sys.path.insert(
+    0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "tools")
+)
 import bidet_packet as bp  # noqa: E402
 
 # (hex packet, key, n4, n5, n6, note) - captured from the remote with rtl_433 / an RTL-SDR
@@ -41,7 +44,9 @@ class PacketTests(unittest.TestCase):
         for hexv, key, n4, n5, n6, note in CAPTURED:
             with self.subTest(note):
                 p = int(hexv, 16)
-                self.assertEqual(bp.decode(p), {"key": key, "n4": n4, "n5": n5, "n6": n6})
+                self.assertEqual(
+                    bp.decode(p), {"key": key, "n4": n4, "n5": n5, "n6": n6}
+                )
                 self.assertEqual(bp.encode(key, n4, n5, n6), p)
 
     def test_bad_checksum_and_header(self):
@@ -50,21 +55,25 @@ class PacketTests(unittest.TestCase):
 
     def test_level_codes(self):
         self.assertEqual([bp.level_code(i) for i in (1, 2, 3)], [1, 3, 5])
-        self.assertEqual([bp.level_from_code(c) for c in (0, 1, 2, 3, 4, 5)], [0, 1, 0, 2, 0, 3])
+        self.assertEqual(
+            [bp.level_from_code(c) for c in (0, 1, 2, 3, 4, 5)], [0, 1, 0, 2, 0, 3]
+        )
 
     def test_burst_shape(self):
         b = bp.burst(0x2A52333C)
-        self.assertEqual(len(b), 84)                       # 42 pulses
+        self.assertEqual(len(b), 84)  # 42 pulses
         self.assertEqual(sum(1 for x in b if x > 0), 42)
-        self.assertLess(sum(abs(x) for x in b), 90000)     # ~83 ms on air
+        self.assertLess(sum(abs(x) for x in b), 90000)  # ~83 ms on air
         self.assertEqual(b[:2], [240, -564])
-        self.assertEqual(b[16:18], [564, -4524])           # sync after the 7 preamble pairs
+        self.assertEqual(b[16:18], [564, -4524])  # sync after the 7 preamble pairs
 
     def test_press_spacing(self):
         p = bp.press(0x2A52333C)
         self.assertEqual(len(p), 168)
         first = sum(abs(x) for x in p[:84])
-        self.assertAlmostEqual(first, 120000, delta=1)     # second burst starts 120 ms after the first
+        self.assertAlmostEqual(
+            first, 120000, delta=1
+        )  # second burst starts 120 ms after the first
 
     def test_parse_roundtrip(self):
         for hexv, *_ in CAPTURED:

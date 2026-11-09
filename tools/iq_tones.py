@@ -13,6 +13,7 @@ Assumes complex uint8 I/Q (.cu8) at 250 kHz sample rate and a centre frequency o
 FS / CENTRE_HZ below otherwise. Weather stations and other 433 MHz devices show up as short bursts too:
 look for the ~220 ms (two-burst) or ~83 ms (one-burst) transmissions.
 """
+
 import argparse
 import math
 
@@ -30,7 +31,7 @@ def find_bursts(data, min_ms=20):
     n = len(data) // 2
     mags = []
     for k in range(n // BLOCK):
-        seg = data[2 * k * BLOCK: 2 * (k + 1) * BLOCK]
+        seg = data[2 * k * BLOCK : 2 * (k + 1) * BLOCK]
         total = 0.0
         for i in range(0, len(seg), 2):
             total += math.hypot(seg[i] - 127.5, seg[i + 1] - 127.5)
@@ -41,7 +42,10 @@ def find_bursts(data, min_ms=20):
     while i < len(mags):
         if mags[i] > thr:
             j = i
-            while j < len(mags) and (mags[j] > thr or any(mags[j + d] > thr for d in (1, 2) if j + d < len(mags))):
+            while j < len(mags) and (
+                mags[j] > thr
+                or any(mags[j + d] > thr for d in (1, 2) if j + d < len(mags))
+            ):
                 j += 1
             if j - i >= min_ms:
                 bursts.append((i, j))
@@ -53,28 +57,38 @@ def find_bursts(data, min_ms=20):
 
 def inst_freq(data, start_ms, dur_ms):
     a, b = int(start_ms * FS / 1000), int((start_ms + dur_ms) * FS / 1000)
-    I = [data[2 * i] - 127.5 for i in range(a, b)]
-    Q = [data[2 * i + 1] - 127.5 for i in range(a, b)]
+    # In-phase (I) and quadrature (Q) samples
+    i_s = [data[2 * i] - 127.5 for i in range(a, b)]
+    q_s = [data[2 * i + 1] - 127.5 for i in range(a, b)]
     f = []
-    for i in range(1, len(I)):
-        re = I[i] * I[i - 1] + Q[i] * Q[i - 1]
-        im = Q[i] * I[i - 1] - I[i] * Q[i - 1]
+    for i in range(1, len(i_s)):
+        re = i_s[i] * i_s[i - 1] + q_s[i] * q_s[i - 1]
+        im = q_s[i] * i_s[i - 1] - i_s[i] * q_s[i - 1]
         f.append(math.atan2(im, re) * FS / (2 * math.pi))
-    return [sum(f[i:i + 5]) / 5 for i in range(0, len(f) - 5)]  # 5-sample smoothing
+    return [sum(f[i : i + 5]) / 5 for i in range(len(f) - 5)]  # 5-sample smoothing
 
 
 def main():
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("file")
-    ap.add_argument("--burst", type=int, default=1, help="which detected burst to analyse (1 = first)")
-    ap.add_argument("--min-ms", type=int, default=20, help="ignore bursts shorter than this")
+    ap.add_argument(
+        "--burst",
+        type=int,
+        default=1,
+        help="which detected burst to analyse (1 = first)",
+    )
+    ap.add_argument(
+        "--min-ms", type=int, default=20, help="ignore bursts shorter than this"
+    )
     args = ap.parse_args()
 
     data = load(args.file)
     bursts, med = find_bursts(data, args.min_ms)
-    print("noise floor %.1f, %d bursts >= %d ms:" % (med, len(bursts), args.min_ms))
+    print(f"noise floor {med:.1f}, {len(bursts)} bursts >= {args.min_ms} ms:")
     for n, (a, b) in enumerate(bursts, 1):
-        print("  %2d  t=%.3f s  duration %d ms" % (n, a / 1000, b - a))
+        print(f"  {n:2d}  t={a / 1000:.3f} s  duration {b - a} ms")
     if not bursts:
         return
     a, b = bursts[min(args.burst, len(bursts)) - 1]
@@ -86,11 +100,14 @@ def main():
     low = sorted(x for x in g if x < mid)
     high = sorted(x for x in g if x >= mid)
     fl, fh = low[len(low) // 2], high[len(high) // 2]
-    print("\nburst %d: tones relative to %.4f MHz:" % (args.burst, CENTRE_HZ / 1e6))
-    print("  high tone (mark)  %+8.1f kHz  = %.4f MHz" % (fh / 1e3, (CENTRE_HZ + fh) / 1e6))
-    print("  low tone  (space) %+8.1f kHz  = %.4f MHz" % (fl / 1e3, (CENTRE_HZ + fl) / 1e6))
-    print("  centre            %+8.1f kHz  = %.4f MHz   deviation +-%.1f kHz" % (
-        (fh + fl) / 2e3, (CENTRE_HZ + (fh + fl) / 2) / 1e6, (fh - fl) / 2e3))
+    print(f"\nburst {args.burst}: tones relative to {CENTRE_HZ / 1e6:.4f} MHz:")
+    centre = (fh + fl) / 2
+    print(f"  high tone (mark)  {fh / 1e3:+8.1f} kHz  = {(CENTRE_HZ + fh) / 1e6:.4f} MHz")
+    print(f"  low tone  (space) {fl / 1e3:+8.1f} kHz  = {(CENTRE_HZ + fl) / 1e6:.4f} MHz")
+    print(
+        f"  centre            {centre / 1e3:+8.1f} kHz  = {(CENTRE_HZ + centre) / 1e6:.4f} MHz"
+        f"   deviation +-{(fh - fl) / 2e3:.1f} kHz"
+    )
     runs, cur, n = [], g[0] > mid, 0
     for x in g:
         s = x > mid
@@ -100,7 +117,7 @@ def main():
             runs.append((cur, n / FS * 1e6))
             cur, n = s, 1
     print("\npulse / gap run lengths (us), first 100:")
-    print(" ".join("%s%d" % ("H" if c else "L", round(u)) for c, u in runs[:100]))
+    print(" ".join(f"{'H' if c else 'L'}{round(u)}" for c, u in runs[:100]))
 
 
 if __name__ == "__main__":

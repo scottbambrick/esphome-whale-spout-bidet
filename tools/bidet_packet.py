@@ -10,6 +10,7 @@ Packet = 8 nibbles: 2 a | key (2 nibbles) | n4 n5 n6 | checksum
   n4 / n5 / n6 are the remote's remembered settings of the function the key belongs to (see docs/protocol.md);
   levels 1/2/3 are coded 1/3/5, except the seat heater which is the plain level 0..3.
 """
+
 import sys
 
 # Burst timings in microseconds (see docs/protocol.md)
@@ -19,8 +20,8 @@ SYNC_GAP = 4524
 GAP0 = 564
 GAP1 = 1692
 TAIL = 19900
-PAD = 10000          # extra idle low tone ESPHome adds before the first burst so the CC1101 can settle
-BURST_SPACING = 120000   # start to start of the two bursts of one press
+PAD = 10000  # extra idle low tone ESPHome adds before the first burst so the CC1101 can settle
+BURST_SPACING = 120000  # start to start of the two bursts of one press
 
 KEYS = {
     0x52: "Rear",
@@ -73,11 +74,11 @@ def decode(packet):
 def burst(packet):
     """One burst as signed microsecond timings: positive = high tone, negative = low tone. 84 values."""
     t = [LEAD, -UNIT]
-    t += [UNIT, -UNIT] * 7          # preamble
-    t += [UNIT, -SYNC_GAP]          # sync
-    for i in range(31, -1, -1):     # 32 data bits, MSB first
+    t += [UNIT, -UNIT] * 7  # preamble
+    t += [UNIT, -SYNC_GAP]  # sync
+    for i in range(31, -1, -1):  # 32 data bits, MSB first
         t += [UNIT, -(GAP1 if (packet >> i) & 1 else GAP0)]
-    t += [UNIT, -TAIL]              # stop pulse + tail
+    t += [UNIT, -TAIL]  # stop pulse + tail
     return t
 
 
@@ -112,11 +113,12 @@ if __name__ == "__main__":
     args = sys.argv[1:]
     if args and args[0] == "--encode" and len(args) == 5:
         key, n4, n5, n6 = (int(x, 0) for x in args[1:])
-        print("%08x" % encode(key, n4, n5, n6))
+        print(f"{encode(key, n4, n5, n6):08x}")
     elif len(args) == 1:
         d = decode(int(args[0], 16))
         if d is None:
             sys.exit("not a valid packet (header 2a / checksum)")
-        print("key 0x%02X (%s)  n4=%d n5=%d n6=%d" % (d["key"], KEYS.get(d["key"], "unknown"), d["n4"], d["n5"], d["n6"]))
+        name = KEYS.get(d["key"], "unknown")
+        print(f"key 0x{d['key']:02X} ({name})  n4={d['n4']} n5={d['n5']} n6={d['n6']}")
     else:
         print(__doc__)
