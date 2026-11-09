@@ -102,8 +102,12 @@ def main():
     fl, fh = low[len(low) // 2], high[len(high) // 2]
     print(f"\nburst {args.burst}: tones relative to {CENTRE_HZ / 1e6:.4f} MHz:")
     centre = (fh + fl) / 2
-    print(f"  high tone (mark)  {fh / 1e3:+8.1f} kHz  = {(CENTRE_HZ + fh) / 1e6:.4f} MHz")
-    print(f"  low tone  (space) {fl / 1e3:+8.1f} kHz  = {(CENTRE_HZ + fl) / 1e6:.4f} MHz")
+    print(
+        f"  high tone (mark)  {fh / 1e3:+8.1f} kHz  = {(CENTRE_HZ + fh) / 1e6:.4f} MHz"
+    )
+    print(
+        f"  low tone  (space) {fl / 1e3:+8.1f} kHz  = {(CENTRE_HZ + fl) / 1e6:.4f} MHz"
+    )
     print(
         f"  centre            {centre / 1e3:+8.1f} kHz  = {(CENTRE_HZ + centre) / 1e6:.4f} MHz"
         f"   deviation +-{(fh - fl) / 2e3:.1f} kHz"
